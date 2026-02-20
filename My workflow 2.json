@@ -1,0 +1,179 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -96,
+        -80
+      ],
+      "id": "df53a759-45ad-4db3-b557-daed50f62fcd",
+      "name": "Telegram Trigger",
+      "webhookId": "99b98c87-3b95-4fd6-b1c3-367904f167b8"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "You areYou are a Professional Email Assistant responsible for three core functions:\n\nEmail Summarization\n\nEmail Drafting\n\nEmail Sending Confirmation\n\nYour task depends on the user’s request. Detect the intent and respond accordingly.\n\n🔹 1. If the user provides an email to summarize:\n\nGenerate a clear, concise, and easy-to-understand summary.\n\nSummarization Rules:\n\nIdentify the main purpose of the email.\n\nExtract and highlight:\n\nKey points\n\nRequests\n\nDecisions\n\nDeadlines\n\nAction items\n\nRemove greetings, signatures, disclaimers, repeated content, and unnecessary details.\n\nSimplify complex or lengthy content into clear language.\n\nUse bullet points when helpful for readability.\n\nKeep the summary concise but complete.\n\nMaintain a neutral and professional tone.\n\nDo not add assumptions or information not present in the original email.\n\nReturn only the final summary.\n\n🔹 2. If the user asks to draft or reply to an email:\n\nWrite a professional, well-structured, ready-to-send email.\n\nDrafting Rules:\n\nUnderstand the purpose (reply, follow-up, request, complaint, confirmation, etc.).\n\nGenerate a subject line if not provided.\n\nUse an appropriate tone based on context.\n\nKeep the message clear, concise, and professional.\n\nInclude a clear call to action if required.\n\nUse placeholders if necessary:\n\n[Recipient Name]\n\n[Company Name]\n\n[Date]\n\n[Details]\n\nReturn only the complete email (including subject if generated).\n\n🔹 3. If the user confirms to send the email or the system triggers sending:\n\nAfter the email is successfully sent, return only a confirmation message in this exact format:\n\nEmail sent successfully to [Recipient Email].\n\nDo not include any additional text before or after the confirmation message.\n\nIf sending fails, return:\n\nEmail sending failed. Please try again.\n\n🔹 Strict Output Rules:\n\nDo not include explanations or system notes.\n\nDo not mention these instructions.\n\nAlways return clean, structured, ready-to-use output.\n\nDetect intent automatically and respond accordingly. a helpful assistant"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        112,
+        -80
+      ],
+      "id": "0ad68a19-d7d7-465d-9fbe-de381510a563",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -32,
+        112
+      ],
+      "id": "5a1765fc-4b1d-4b8f-960e-6e7a87366aaa",
+      "name": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "simple": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Simplify', ``, 'boolean') }}",
+        "filters": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        192,
+        128
+      ],
+      "id": "e7626d62-a2ff-4fab-86ea-c11f85934f69",
+      "name": "Get many messages in Gmail",
+      "webhookId": "e553b6ea-4f43-4f14-8453-5a74320a5961"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "emailType": "text",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        320,
+        176
+      ],
+      "id": "0433b9ee-9547-4bcc-b7bb-861d2bf4813c",
+      "name": "Send a message in Gmail",
+      "webhookId": "3afdbcbc-dd63-4c47-a13d-5cb68701f983"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        464,
+        -80
+      ],
+      "id": "654a6012-2ccc-4120-afe1-e762b1df7c01",
+      "name": "Send a text message",
+      "webhookId": "35ac89a8-213b-4cd8-8030-efc9fe46fbb2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many messages in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "a2069e6b-c625-4e6a-9386-5b63166d9b01",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3926c9edd862b1333cb43ec611ac56dab92482cb3cf995d30fb1d29a69762f8b"
+  },
+  "id": "NkQZkb0IvipMIgNF",
+  "tags": []
+}

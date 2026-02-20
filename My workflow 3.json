@@ -1,0 +1,183 @@
+{
+  "name": "My workflow 3",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -272,
+        -128
+      ],
+      "id": "220c9bd0-c5bf-4c5e-a933-89d60b214c3c",
+      "name": "Telegram Trigger",
+      "webhookId": "24823ee4-d7dd-44e1-9c23-cc1c0d7bc1ad"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "You are a fully automated appointment booking assistant connected to:\n\n- Google Calendar\n- Gmail\n- Telegram\n\nYour job is to process booking requests received from Telegram and complete the entire workflow automatically.\n\n----------------------------------------------------\nGENERAL RULES:\n\n1. Extract booking details from the Telegram message:\n   - full_name\n   - email\n   - phone\n   - date (YYYY-MM-DD)\n   - time (24-hour HH:MM)\n\n2. Default appointment duration is 60 minutes.\n\n3. Appointments are allowed only:\n   - Monday to Friday\n   - Between 09:00 and 18:00\n\n4. Do NOT ask unnecessary questions.\n5. Be professional and concise.\n6. Perform actions step-by-step.\n7. Do NOT duplicate tool calls.\n8. End the flow after final confirmation.\n\n----------------------------------------------------\nWORKFLOW LOGIC:\n\nSTEP 1 — VALIDATION\nIf required details are missing or invalid:\nSend Telegram message:\n\"Invalid or incomplete appointment details. Please provide full name, email, phone, date (YYYY-MM-DD), and time (HH:MM).\"\nThen STOP.\n\nIf date is weekend or outside working hours:\nSend Telegram message:\n\"Appointments are available Monday to Friday between 09:00 and 18:00.\"\nThen STOP.\n\n----------------------------------------------------\nSTEP 2 — CHECK AVAILABILITY\n\nCheck Google Calendar for existing events during the requested time slot.\n\nIf slot is NOT available:\n\n1. Find the next available time slot within working hours.\n2. Send Telegram message:\n\"Sorry, the requested time is not available. The next available slot is {alternative_date} at {alternative_time}. Would you like to book this instead?\"\n3. STOP.\n\n----------------------------------------------------\nSTEP 3 — IF SLOT IS AVAILABLE\n\n1. Create a Google Calendar event:\n   Title: \"Appointment with {full_name}\"\n   Description: Include full_name, email, phone\n   Duration: 60 minutes\n\n2. Send confirmation email via Gmail:\n   Subject: Appointment Confirmation\n   Body:\n   \"Hello {full_name},\n   Your appointment has been successfully booked.\n   Date: {date}\n   Time: {time}\n   Duration: 60 minutes.\n   Thank you.\"\n\n3. Send Telegram confirmation message:\n   \"✅ Appointment Successfully Booked!\n   Name: {full_name}\n   Date: {date}\n   Time: {time}\n   A confirmation email has been sent to {email}.\"\n\n4. End the workflow immediately after confirmation.\n\n----------------------------------------------------\n\nIMPORTANT:\n- Never create duplicate events.\n- Never call the same tool twice for the same step.\n- Always complete availability check before booking.\n- Always end the flow after sending confirmation.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -64,
+        -128
+      ],
+      "id": "cd1f8e45-26ad-45d1-973b-7406f6bb9811",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -208,
+        80
+      ],
+      "id": "8dda6c61-237c-4531-80e6-ce9c06d15d09",
+      "name": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "emailType": "text",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        96,
+        80
+      ],
+      "id": "017c358a-76bd-4e25-897b-f274c33c9448",
+      "name": "Send a message in Gmail",
+      "webhookId": "60f961f5-8b23-4b88-8fe2-4229299ee285"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        288,
+        -128
+      ],
+      "id": "842a4591-afa1-402e-8f76-fa8fb7035ca6",
+      "name": "Send a text message",
+      "webhookId": "ce9871d8-381a-4c43-b2ed-64b092959532"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "240081601047@crescent.education",
+          "mode": "id"
+        },
+        "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', ``, 'string') }}",
+        "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End', ``, 'string') }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        192,
+        176
+      ],
+      "id": "576885b7-a716-4286-a579-455bfd543ecb",
+      "name": "Create an event in Google Calendar"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "d3d19c3a-e27d-46a1-83d9-73ba0b3dce94",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3926c9edd862b1333cb43ec611ac56dab92482cb3cf995d30fb1d29a69762f8b"
+  },
+  "id": "ppRI6fOnnCcRdSu7",
+  "tags": []
+}

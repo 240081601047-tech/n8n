@@ -1,0 +1,123 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -176,
+        -96
+      ],
+      "id": "39a09bbf-2b16-410d-abe7-04be432a216e",
+      "name": "Telegram Trigger",
+      "webhookId": "c7f552a5-935a-4a88-9ec7-803adc072c44"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}{{ $json.message.entities[0].type }}",
+        "options": {
+          "systemMessage": "\"For every question I ask, answer from the perspective of the current generation. Include present-day knowledge, technology, culture, and awareness. Write the response in short, clear paragraphs, each focusing on one idea. Keep the tone modern, engaging, and relatable, reflecting how people today would think and speak.\""
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        32,
+        -96
+      ],
+      "id": "def6c97a-95cc-4544-bc07-6b4509a3c5ce",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -112,
+        112
+      ],
+      "id": "6b938912-cb4b-400b-9394-3f2f7bcf9428",
+      "name": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        384,
+        -96
+      ],
+      "id": "ef72db07-bc9c-49d9-a572-b9296053bce6",
+      "name": "Send a text message",
+      "webhookId": "c5fc2c45-3c29-4d6d-b671-f9471cdf18cb"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "d4831fbd-258d-4c0e-95c7-d09904605927",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3926c9edd862b1333cb43ec611ac56dab92482cb3cf995d30fb1d29a69762f8b"
+  },
+  "id": "5XxMCIx5Lmu0Z175",
+  "tags": []
+}
